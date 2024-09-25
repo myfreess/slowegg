@@ -2,10 +2,15 @@ type Id Int derive(Eq, Hash)
 
 struct Term {
   head : Symbol
-  args : Array[Id]
+  args : FixedArray[Id] // don't modify its content
 } derive(Eq)
 
-// TODO: Implement hash() for Term
+pub impl Hash for Term with hash_combine(self, hasher) {
+  hasher.combine(self.head)
+  for i = 0; i < self.args.length(); i = i + 1 {
+    hasher.combine(self.args[i])
+  }
+}
 
 struct EClass {
   nodes : Array[Term]
