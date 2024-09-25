@@ -1,4 +1,4 @@
-type Symbol Int
+type Symbol Int derive(Eq, Hash)
 
 struct SymbolCtx {
   locations : @hashmap.T[String, Symbol]
