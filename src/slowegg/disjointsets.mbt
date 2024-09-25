@@ -13,38 +13,38 @@ fn DisjointSets::new[T : Eq + Hash](elems : Array[T]) -> DisjointSets[T] {
   DisjointSets::{ roots: rs, ranks: ks }
 }
 
-fn rootOf[T : Eq + Hash](self : DisjointSets[T], elem : T) -> T {
+fn find_root[T : Eq + Hash](self : DisjointSets[T], elem : T) -> T {
   let root = self.roots[elem].unwrap()
   if root == elem {
     return elem
   } else {
-    self.roots[elem] = self.rootOf(root)
+    self.roots[elem] = self.find_root(root)
     return self.roots[elem].unwrap()
   }
 }
 
-fn rankOf[T : Eq + Hash](self : DisjointSets[T], elem : T) -> Int {
+fn rank_of[T : Eq + Hash](self : DisjointSets[T], elem : T) -> Int {
   self.ranks[elem].unwrap()
 }
 
 fn union[T : Eq + Hash](self : DisjointSets[T], x : T, y : T) -> Unit {
-  let x = self.rootOf(x)
-  let y = self.rootOf(y)
+  let x = self.find_root(x)
+  let y = self.find_root(y)
   if x == y {
     return
   }
-  if self.rankOf(x) <= self.rankOf(y) {
+  if self.rank_of(x) <= self.rank_of(y) {
     self.roots[x] = y
   } else {
     self.roots[y] = x
   }
-  if self.rankOf(x) == self.rankOf(y) {
-    self.ranks[y] = self.rankOf(y) + 1 // 启发式策略，上界相同的树合并有可能导致最大高度超过原上界
+  if self.rank_of(x) == self.rank_of(y) {
+    self.ranks[y] = self.rank_of(y) + 1 // 启发式策略，上界相同的树合并有可能导致最大高度超过原上界
   }
 }
 
 fn same_set[T : Eq + Hash](self : DisjointSets[T], x : T, y : T) -> Bool {
-  self.rootOf(x) == self.rootOf(y)
+  self.find_root(x) == self.find_root(y)
 }
 
 test "union find" {
