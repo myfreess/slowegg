@@ -18,7 +18,8 @@ struct EClass {
 }
 
 struct EGraph {
-  unionfind : DisjointSets[Int]
+  mut next_id : Int
+  unionfind : DisjointSets[Id]
   memo : @hashmap.T[Term, Id]
   classes : @hashmap.T[Id, EClass]
   dirty_unions : Array[Id]
@@ -26,6 +27,7 @@ struct EGraph {
 
 fn EGraph::new() -> EGraph {
   EGraph::{
+    next_id : 0,
     unionfind : DisjointSets::new([]),
     memo : @hashmap.new(),
     classes : @hashmap.new(),
@@ -33,12 +35,18 @@ fn EGraph::new() -> EGraph {
   }
 }
 
+fn next_id(self : EGraph) -> Id {
+  let id = self.next_id
+  self.next_id += 1
+  return id
+}
+
 fn find_root(self : EGraph, id : Id) -> Id {
-  self.unionfind.find_root(id._)
+  self.unionfind.find_root(id)
 }
 
 fn same_class(self : EGraph, t1 : Term, t2 : Term) -> Bool {
-  self.unionfind.same_set(self.memo[t1].unwrap()._, self.memo[t2].unwrap()._)
+  self.unionfind.same_set(self.memo[t1].unwrap(), self.memo[t2].unwrap())
 }
 
 fn canonicalize(self : EGraph, t : Term) -> Unit {
@@ -54,6 +62,25 @@ fn find_class(self : EGraph, t : Term) -> Id? {
     return Some(self.find_root(id))
   } else {
     return None
+  }
+}
+
+fn push(self : EGraph, t : Term) -> Id {
+  let id = self.find_class(t)
+  match id {
+    None => {
+      let id = self.next_id()
+      self.unionfind.union(id, id)
+      let cls = EClass::{ nodes : [t], parents : [] }
+      for child in t.args {
+        self.classes[child].unwrap().parents.push((t, id))
+      } else {
+        self.classes[id] = cls
+        self.memo[t] = id
+        return id
+      }
+    }
+    Some(id) => id
   }
 }
 
